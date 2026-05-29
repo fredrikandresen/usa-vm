@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nova VM 2026</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body data-page="app">
+    <main class="shell app-shell">
+      <header class="card app-header">
+        <div>
+          <p class="eyebrow">FIFA World Cup 2026</p>
+          <h1 data-i18n="appName">Nova VM 2026</h1>
+          <p id="session-meta" class="muted"></p>
+        </div>
+        <div class="header-actions">
+          <label class="language-picker">
+            <span data-i18n="language">Language</span>
+            <select id="language-select"></select>
+          </label>
+          <button id="logout-button" class="button-secondary" data-i18n="logout">Logout</button>
+        </div>
+      </header>
+
+      <nav class="tab-nav card">
+        <button class="tab-button active" data-tab="predictions" data-i18n="predictions">Predictions</button>
+        <button class="tab-button" data-tab="leaderboard" data-i18n="leaderboard">Leaderboard</button>
+        <button class="tab-button" data-tab="dashboard" data-i18n="dashboard">Dashboard</button>
+      </nav>
+
+      <section id="predictions-tab" class="tab-panel active stack">
+        <div class="card stack">
+          <div class="section-header">
+            <h2 data-i18n="groupPredictions">Group winners</h2>
+          </div>
+          <div id="group-predictions" class="grid cards-grid"></div>
+        </div>
+
+        <div class="card stack">
+          <div class="section-header">
+            <h2 data-i18n="upcomingMatches">Upcoming matches</h2>
+          </div>
+          <div id="matches-list" class="grid cards-grid"></div>
+        </div>
+      </section>
+
+      <section id="leaderboard-tab" class="tab-panel stack hidden">
+        <div class="card stack">
+          <div class="section-header leaderboard-header">
+            <h2 data-i18n="leaderboard">Leaderboard</h2>
+            <label>
+              <span data-i18n="stage">Stage</span>
+              <select id="leaderboard-stage">
+                <option value="all">Overall</option>
+                <option value="group">Group</option>
+              </select>
+            </label>
+          </div>
+          <div id="leaderboard-list" class="stack"></div>
+        </div>
+      </section>
+
+      <section id="dashboard-tab" class="tab-panel stack hidden">
+        <div class="grid two-up">
+          <div class="card metric-card">
+            <span data-i18n="rank">Rank</span>
+            <strong id="dashboard-rank">-</strong>
+          </div>
+          <div class="card metric-card">
+            <span data-i18n="points">Points</span>
+            <strong id="dashboard-points">0</strong>
+          </div>
+        </div>
+        <div class="grid two-up">
+          <div class="card stack">
+            <h2 data-i18n="predictions">Predictions</h2>
+            <div id="dashboard-predictions" class="stack compact-list"></div>
+          </div>
+          <div class="card stack">
+            <h2 data-i18n="groupPredictions">Group winners</h2>
+            <div id="dashboard-groups" class="stack compact-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="app-feedback" class="toast hidden"></section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
