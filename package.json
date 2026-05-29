@@ -1,0 +1,22 @@
+{
+  "name": "usa-vm",
+  "version": "1.0.0",
+  "description": "Nova VM 2026 prediction game",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "fifa",
+    "predictions",
+    "azure",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
