@@ -18,6 +18,8 @@ function mustBeAdmin(req, res, next) {
   return next();
 }
 
+app.get('/', (_req, res) => res.json({ name: 'Nova VM 2026 API', status: 'ok' }));
+
 app.get('/api/companies', (_req, res) => res.json(db.companies));
 
 app.post('/api/signup', (req, res) => {
