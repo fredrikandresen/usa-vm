@@ -9,7 +9,7 @@ create table if not exists users (
   name text not null,
   company text not null references companies(id),
   is_admin boolean not null default false,
-  auth_provider text not null default 'supabase_magic_link',
+  auth_provider text not null default 'magic_link',
   created_at timestamptz not null default now()
 );
 
@@ -72,5 +72,19 @@ create table if not exists scores (
   match_id text references matches(id) on delete set null,
   points_awarded int not null,
   breakdown_json jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists magic_link_tokens (
+  id bigserial primary key,
+  email text not null,
+  hashed_token text not null unique,
+  created_at timestamptz not null default now(),
+  used boolean not null default false
+);
+
+create table if not exists sessions (
+  token text primary key,
+  user_id uuid not null references users(id) on delete cascade,
   created_at timestamptz not null default now()
 );

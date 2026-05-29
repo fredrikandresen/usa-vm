@@ -7,9 +7,42 @@ import {
   rerunScoring,
   signup
 } from '../lib/store.js';
+import {
+  createMagicLinkToken,
+  verifyMagicLinkToken,
+  createSessionToken,
+  storeSession,
+  getSession,
+  sendMagicLinkEmail
+} from '../lib/auth.js';
 
 const app = express();
 app.use(express.json());
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+
+// Simple in-memory rate limiter for auth endpoints
+const rateLimitStore = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 5; // max requests per window
+
+function rateLimit(req, res, next) {
+  const key = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { windowStart: now, count: 1 });
+    return next();
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  entry.count++;
+  return next();
+}
 
 function mustBeAdmin(req, res, next) {
   const adminId = req.header('x-admin-user-id');
@@ -18,9 +51,51 @@ function mustBeAdmin(req, res, next) {
   return next();
 }
 
+function mustBeAuthenticated(req, res, next) {
+  const authHeader = req.header('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  const token = authHeader.slice(7);
+  const session = getSession(token);
+  if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+  req.userId = session.userId;
+  return next();
+}
+
 app.get('/', (_req, res) => res.json({ name: 'Nova VM 2026 API', status: 'ok' }));
 
 app.get('/api/companies', (_req, res) => res.json(db.companies));
+
+app.post('/api/auth/login', rateLimit, (req, res) => {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'email is required' });
+
+  const user = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) return res.status(404).json({ error: 'User not found. Please sign up first.' });
+
+  const token = createMagicLinkToken(email);
+  const magicLinkUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
+  sendMagicLinkEmail(email, magicLinkUrl);
+
+  return res.json({ message: 'Magic link sent to your email' });
+});
+
+app.get('/api/auth/verify', rateLimit, (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: 'token is required' });
+
+  const email = verifyMagicLinkToken(token);
+  if (!email) return res.status(401).json({ error: 'Invalid or expired magic link' });
+
+  const user = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const sessionToken = createSessionToken();
+  storeSession(sessionToken, user.id);
+
+  return res.json({ session_token: sessionToken, user });
+});
 
 app.post('/api/signup', (req, res) => {
   const { email, name, company } = req.body || {};
@@ -32,12 +107,14 @@ app.post('/api/signup', (req, res) => {
   if (!db.companies.find((c) => c.id === company)) return res.status(400).json({ error: 'Unknown company' });
 
   const user = signup({ email, name, company });
+
+  const token = createMagicLinkToken(email);
+  const magicLinkUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
+  sendMagicLinkEmail(email, magicLinkUrl);
+
   return res.status(201).json({
     user,
-    auth: {
-      current: 'supabase_magic_link',
-      future: 'microsoft_entra_id'
-    }
+    message: 'Magic link sent to your email to complete login'
   });
 });
 
